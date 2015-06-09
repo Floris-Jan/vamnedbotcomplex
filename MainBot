@@ -1,0 +1,132 @@
+########################### IMPORT NECESSARY MODULES ################################
+
+import vamnedbotdefaults
+import socket
+import vamnedbotfun
+import threading
+
+########################### SETTING VARIABLES ########################################
+
+bot_owner = ''
+server = "irc.twitch.tv"
+channel = "#"
+channelbot = "#"
+botnick = ''
+port = 6667
+password = 'oauth:'
+greetstreamers = vamnedbotdefaults.greetstreamersdefault
+regularusers = vamnedbotdefaults.regularusersdefault
+quotelist = vamnedbotdefaults.quotelist
+chatdata = 'niente'
+check = True
+
+###################### DICTIONARY #################################
+
+commanddictionary = {'hi chat' : vamnedbotfun.Comms.sayhello,
+                     'hello chat': vamnedbotfun.Comms.sayhello,
+                     'go to sleep vamned' : vamnedbotfun.Comms.sleep,
+                     'vb random quote' : vamnedbotfun.Comms.random_quote,
+                     'vb fly away' : vamnedbotfun.Comms.turn_off,
+                     '!vbgc' : vamnedbotfun.Comms.gamble_close,
+                     'hug' : vamnedbotfun.Comms.hug,
+#                     '' : vamnedbotfun.Comms.greeting,
+                     '!quote' : vamnedbotfun.Comms.quoteprint,
+                     '!quotecount' : vamnedbotfun.Comms.quotecount,
+                     'vb reset counter streamers' : vamnedbotfun.Comms.resetcounterstreamers,
+                     'vb reset counter regulars' : vamnedbotfun.Comms.resetcounterregularusers,
+                     'vb permit me' : vamnedbotfun.Comms.selfpermit,
+                     '!go' : vamnedbotfun.Comms.gamble_open_DST,
+                     ':musk: ' : vamnedbotfun.Comms.muskcollector}
+
+
+########################## SETTING SOME FUNCTIONS ###################################
+
+
+########################## SETTING THE CLASS ########################################
+
+class Bot:
+    def __init__(self, channel, port, password, bot_owner, server, channelbot, root_admin, greetstreamers, regularusers, quotelist, commanddictionary, check):
+        self.chatdata = chatdata
+        self.password = password
+        self.channel = channel
+        self.port = port
+        self.bot_owner = bot_owner
+        self.server = server
+        self.channelbot = channelbot
+        self.botnick = botnick
+        self.root_admin = root_admin
+        self.sock = socket.socket()
+        self.greetstreamers = greetstreamers
+        self.regularusers = regularusers
+        self.quotelist = quotelist
+        self.commanddictionary = commanddictionary
+        self.check = check
+    
+    
+    def sendmsg(self, msg):
+        self.sock.send("PRIVMSG " + self.channel + " :"+msg +'\r\n')
+        print msg
+    
+    def ping(self):
+        self.sock.send("PONG :pong\r\n")
+        print 'PONG'
+  
+    def connect(self):
+        self.sock.connect((self.server, self.port))
+        self.sock.send("PASS " + self.password + '\r\n')
+        self.sock.send("USER "+ self.botnick + "0 *" + self.bot_owner + '\r\n')
+        self.sock.send('NICK ' + self.botnick + '\r\n')
+        self.sock.send("JOIN " + self.channel + '\r\n')
+        print 'vamnedbot should be connecting'
+               
+    def listen(self):
+        while True:
+                    
+            chatdata = self.sock.recv(1024)
+            print chatdata
+            
+            if self.check == True:
+                self.check = False
+                print "CHECKPASSED"
+                t = threading.Timer(300.0, vamnedbotfun.Comms.muskwriting)
+                t = threading.Timer(300.0, checker)
+                t.start()
+                self.check = check
+                print "END OF CHECKER"
+            
+            if chatdata.find('PING :') != -1:
+                boton.ping()
+            
+            if chatdata.find('poopie') !=-1:
+                self.sendmsg('hey guys')
+                
+            d = self.commanddictionary
+            
+            for i in range(0, len(d.keys())):
+                currentkey = d.keys()[i]
+                if currentkey in chatdata:
+                    print 'found key ' + currentkey
+                    print currentkey
+                    d[currentkey](self.sock, chatdata)
+            
+
+            
+            #if chatdata in vamnedbotfun.commanddictionary:
+            #    print('I read it')
+            #    comno = [i for i, x in enumerate(vamnedbotfun.commanddictionary.keys()) if chatdata in vamnedbotfun.commanddictionary.keys()]
+            #    com = vamnedbotfun.commanddictionary.keys()[comno]
+            #    vamnedbotfun.commanddictionary(com)
+            #    
+######################## Some functions ##########################
+
+def checker():
+    print "TIMER ENDED1"
+    check = True
+    return check
+
+
+
+
+######################## STARTING THE BOT ########################
+
+boton = Bot(channel, port, password, bot_owner, server, channelbot, botnick, greetstreamers, regularusers, quotelist, commanddictionary, check)
