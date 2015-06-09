@@ -1,0 +1,224 @@
+# -*- coding: utf-8 -*-
+####################### IMPORT MODULES #########################################
+
+import sys
+import random 
+import thread
+import time
+#from vamnedbotdefaults import greetstreamersdefault, regularusersdefault, quotelist
+import vamnedbotdefaults
+
+###################### QUOTES & DICTIONARIES ######################################
+# <codecell>
+
+botnick = ''
+channel = '#namehere'
+streamer = channel[1:]
+root_admin = ['thegamingathlete55', 'vamned', streamer, 'startplayfinish', 'arauro']
+greetstreamers = vamnedbotdefaults.greetstreamersdefault
+regularusers = vamnedbotdefaults.regularusersdefault
+quotelist = vamnedbotdefaults.quotelist
+greetlist = vamnedbotdefaults.greetlist
+muskdict = vamnedbotdefaults.muskdict
+chatdata = 'niente'
+mods = vamnedbotdefaults.mods
+
+
+
+
+####################### CHAT FUNCTIONS ##############################
+# <codecell>
+class Commands:
+    def __init__(self, chatdata, regularusers, greetstreamers, quotelist, rootadmin, channel, mods, greetlist, muskdict):
+        self.chatdata = chatdata
+        self.regularusers = regularusers
+        self.greetstreamers = greetstreamers
+        self.quotelist = quotelist
+        self.rootadmin = rootadmin
+        self.greetlist = greetlist
+        self.channel = channel
+        self.mods = mods
+        self.quotecounter = len(quotelist) - 1
+        self.muskdict = muskdict
+        
+    def importlist(self, chatdata):
+        pass
+    
+    def muskcollector(self, sock, chatdata):
+        if chatuser(chatdata) == 'muskbot':
+            tempdata = chatdata.split(' :')[1].split(' ')
+            user = tempdata[1]
+            if tempdata[3].isdigit() == True:
+                musk = int(tempdata[3])
+                muskdict[user] = musk
+            else:
+                pass
+            print muskdict
+
+    def muskwriting(self):
+        f = open('muskdict.txt', 'w')
+        print "WRITING"
+        f.write(str(muskdict))
+        f.close()
+        return True
+        
+    def givemusk(self, sock, chatdata):
+        receiver = chatdata.split('*')[1]
+        giver = chatuser(chatdata)
+        muskamount = chatdata.split('*')[2]
+        sock.send("PRIVMSG " + self.channel + " :"+'!take ' + giver + ' ' + muskamount + '\r\n')
+        sock.send("PRIVMSG " + self.channel + " :"+'!give '+ receiver + ' ' + muskamount + '\r\n')
+        
+            
+    def sayhello(self, sock, chatdata):
+#        if chatuser(chatdata) not in greetlist:
+#            return 'hello ' + chatuser(chatdata)
+#            greetlist += chatuser(chatdata)
+    
+        pass
+    
+    def quotecount(self, sock,chatdata):
+        sock.send("PRIVMSG " + self.channel + " :" + str(self.quotecount) + "\r\n")
+        
+        
+        
+    def quoteprint(self, sock, chatdata):
+        b = chatmessage(chatdata)
+        z = len(b)
+        print chatmessage(chatdata)
+        print z
+        
+        if is_number(b[6]):
+            if z == 9:
+                print(b[6])
+                no = int(b[6]) - 1
+                print no
+                sock.send("PRIVMSG " + self.channel + " :" +  quotelist[no] + '\r\n')
+                print 'send quote#'
+            elif z==10:
+                no = int(b[6:]) - 1
+                if no < self.quotecounter:
+                    sock.send("PRIVMSG " + self.channel + " :" +  quotelist[no] + '\r\n')
+                    print 'send quote##'
+                else:
+                    sock.send("PRIVMSG " + self.channel + " :" + "Either vamned is lazy or this command doesn't exist yet" + "\r\n")
+            else:
+                sock.send("PRIVMSG " + self.channel + " :" + "Use !quote## or !quote# where ##/# is the number of the command you want" + '\r\n')
+
+            
+    
+    def test(self, sock, chatdata):
+        return 'test succes' + chatuser(chatdata) 
+
+    def sleep(self, sock, chatdata):
+        sock.send("PRIVMSG " + self.channel + " :"+'Stop using macros StartPlayFinish' + '\r\n')
+        
+## self.sock.send("PRIVMSG " + self.channel + " :"+msg +'\r\n')
+    def random_quote(self, sock, chatdata):
+        randomint = random.randrange(0, self.quotecounter, 1)
+        sock.send("PRIVMSG " + self.channel + " :"+ self.quotelist[randomint]  +'\r\n')
+        print("PRIVMSG " + self.channel + " :"+ self.quotelist[randomint]  +'\r\n')
+        
+    def gamble_winner(self, sock, chatdata):
+        if chatuser(chatdata) in self.mods:
+            number = str(chatmessage(chatdata)[3])
+            sock.send("PRIVMSG " + self.channel + " :"+ '!gamble winner ' + number +'\r\n')        
+        
+    def turn_off(self, sock, chatdata):
+        if chatuser(chatdata) in self.mods:
+            sys.exit()
+            
+    def gamble_open_DST(self, sock, chatdata):
+        if chatuser(chatdata) in self.mods:
+            increment = chatmessage(chatdata)[3]
+            startday = chatdata.split('*')[1]
+            if increment.isdigit() == True and startday.isdigit() == True:           
+                bet_options = [None] * 6
+                print 'try out'
+                for i in range(0 , 6 , 1):
+                    bet_options[i] = i * int(increment) + int(startday)
+                
+                print bet_options
+                sock.send("PRIVMSG " + self.channel + " :" + "!gamble open 30 "+str(bet_options[0]) + '-'+str(bet_options[1]) + ', ' +str(bet_options[1])+'-'+str(bet_options[2]) + ', '+ str(bet_options[2])+ '-' +str(bet_options[3])+ ', ' +str(bet_options[3])+'-'+str(bet_options[4])+ ', ' +str(bet_options[4])+'-'+str(bet_options[5])+ ', '+str(bet_options[5])+'+'+'\r\n')
+            else:
+                sock.send("PRIVMSG " + self.channel + " :" + "This command requires you to write !go# !$! wehere # is the increment (single digit) and $ is the number to start on (any amount of digits)" + "\r\n")
+        
+        
+        
+    def gamble_close(self, sock, chatdata):
+        if chatuser(chatdata) in self.mods:
+            minute = chatmessage(chatdata)[5]
+            if minute.isdigit() == True:
+                minute1 = minute
+                minute = int(minute)*60-3
+                sock.send("PRIVMSG " + self.channel + " :" + "I'm closing the gamble in " + str(minute1) + " Minute(s)!" + "\r\n")
+                thread.start_new_thread(Comms.timing, (sock,minute))
+                thread.start_new_thread(Comms.announcer, (sock, minute))
+            else:
+                sock.send("PRIVMSG " + self.channel + " :" + chatuser(chatdata) +  " I need a number after vbgc you dingus!" + "\r\n")
+    
+    def timing(self, sock, delay):
+        print 'EXTRA THREAD IS SLEEPING NOW'
+        time.sleep(delay)
+        sock.send("PRIVMSG " + self.channel + " :" + '!gamble close' + "\r\n")
+
+    def announcer(self, sock, minute):
+        announce_time = minute-30
+        time.sleep(announce_time)
+        sock.send("PRIVMSG " + self.channel + " :" + 'The gamble closes in 30 seconds!' + "\r\n")
+        
+    def add_quote(self, sock, chatdata):
+        self.quotecounter += 1
+        quotelist[self.quotecounter] = chatdata.split('*')[1]
+        
+    def hug(self, sock, chatdata):
+        #print 'hug1'
+        if 'vamnedbot' in chatmessage(chatdata):
+            #print 'hug2'
+            sock.send("PRIVMSG " + self.channel + " :"+ '/me hugs ' + chatuser(chatdata) + "\r\n")
+    
+    def greeting(self, sock, chatdata):
+        if chatuser(chatdata) in self.regularusers:
+            self.regularusers[chatuser(chatdata)] =+ 1
+            if self.regularusers[chatuser(chatdata)] == 3:
+                sock.send("PRIVMSG " + self.channel + " :"+ 'Hey ' + chatuser(chatdata) + ' how you dooin?'+ "\r\n")
+    
+    def resetcounterstreamers(self, sock, chatdata):
+        from vamnedbotdefaults import greetstreamersdefault
+        self.greetstreamers = greetstreamersdefault
+
+    
+    def resetcounterregularusers(self, sock, chatdata):
+        from vamnedbotdefaults import regularusersdefault
+        self.regularusers = regularusersdefault
+    
+    def selfpermit(self, sock, chatdata):
+        if chatuser(chatdata) in regularusers.keys():
+            sock.send("PRIVMSG " + self.channel + " :"+ '!permit ' + chatuser(chatdata) + "\r\n")
+
+####################### MISC FUNCTIONS ##############################
+#%%
+def chatuser(chatdata):
+    return chatdata.split(':')[1].split('!')[0]
+
+#def send(channel, msg):
+#    print msg, channel
+#    socket.socket().send("PRIVMSG "+ channel + " :"+msg + "\r\n")
+
+def chatmessage(chatdata):
+    return chatdata.split(' :')[1]
+
+def timer(delay):
+    print ('EXTRA THREAD IS TAKING TIME NOW FOR ' + str(delay) + ' SECONDS')
+    time.sleep(delay)
+    return '!gamble close'
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+Comms = Commands(chatdata, regularusers, greetstreamers, quotelist, root_admin, channel, mods, greetlist, muskdict)
+
